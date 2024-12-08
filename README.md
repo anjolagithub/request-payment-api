@@ -1,22 +1,21 @@
----
 
 # Quiktis Request Network Integration
 
 ## Overview
 
-This repository contains a server-side implementation for integrating the **Request Network** into the Quiktis platform. The integration leverages the **Request Client SDK** to create and manage payment requests, enabling seamless and transparent transactions between users.
+Quiktis is a decentralized ticketing platform that eliminates fraud, reduces fees, and empowers event organizers and attendees with secure, transparent, and cost-efficient transactions. This repository contains the backend integration with **Request Network**, enabling seamless creation and management of ERC-20 payment requests.
 
-This implementation is designed to work on the **Sepolia testnet** with support for ERC-20 tokens. It eliminates the need for custom smart contract development by utilizing the pre-built infrastructure of the Request Network.
+This implementation runs on the **Sepolia testnet**, leveraging the **Request Client SDK** to simplify blockchain interactions, removing the need for custom smart contracts.
 
 ---
 
 ## Features
 
-- **Payment Requests**: Generate ERC-20 payment requests using the Request Network's client SDK.
-- **Sepolia Testnet Support**: Works seamlessly with the Sepolia testnet.
-- **Fee-less Transactions**: Set up requests without additional fees.
-- **Secure Identity**: Uses Ethereum-based private key signatures for secure transactions.
-- **Scalable API**: Provides RESTful API endpoints for payment integration.
+- **Decentralized Payments**: Securely process ERC-20 payments via Request Network.
+- **Fee-less Transactions**: Create requests without additional fees.
+- **Transparent and Immutable**: Transactions are fully traceable on the blockchain.
+- **Easy Integration**: Provides RESTful API endpoints for frontend connectivity.
+- **Secure Identity**: Uses Ethereum private key signatures to ensure secure authorization.
 
 ---
 
@@ -24,12 +23,12 @@ This implementation is designed to work on the **Sepolia testnet** with support 
 
 ### Prerequisites
 
-Ensure the following are installed on your system:
+Make sure you have the following installed:
 - [Node.js](https://nodejs.org/) (v16 or later)
 - [NPM](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/)
 - A Sepolia testnet wallet with:
   - A private key (for the payee).
-  - Access to Sepolia ETH and relevant ERC-20 tokens.
+  - Access to Sepolia ETH and the relevant ERC-20 tokens.
 
 ### Clone the Repository
 
@@ -50,17 +49,17 @@ npm install
 
 ### Environment Variables
 
-Create a `.env` file in the project root directory with the following variables:
+Create a `.env` file in the project root directory with the following:
 
 ```env
 PORT=3000
 PAYEE_PK=YOUR_PRIVATE_KEY
 ```
 
-- **PORT**: The port number on which the server will run.
-- **PAYEE_PK**: The private key of the payee's Ethereum wallet. This is used to sign requests.
+- **PORT**: Port for running the server.
+- **PAYEE_PK**: The Ethereum wallet private key for signing payment requests.
 
-> ⚠️ **Warning**: Keep your private key secure and do not share it with anyone.
+> ⚠️ **Important**: Keep your private key secure and do not share it.
 
 ---
 
@@ -68,13 +67,13 @@ PAYEE_PK=YOUR_PRIVATE_KEY
 
 ### Starting the Server
 
-Start the server using the following command:
+1. Start the server:
+   ```bash
+   npm start
+   ```
+2. The server will run on `http://localhost:3000` by default.
 
-```bash
-npm start
-```
-
-By default, the server will run on `http://localhost:3000`.
+3. Test the endpoint using **Postman**, **cURL**, or a frontend.
 
 ---
 
@@ -84,12 +83,8 @@ By default, the server will run on `http://localhost:3000`.
 
 **URL**: `/create-request`  
 **Method**: `GET`  
-**Request Body**:  
-- `amount` (string): The payment amount (in token units).
-- `payerAddress` (string): The Ethereum address of the payer.
 
-**Example Request**:
-
+**Request Body**:
 ```json
 {
   "amount": "100",
@@ -97,36 +92,25 @@ By default, the server will run on `http://localhost:3000`.
 }
 ```
 
-**Response**:
+- `amount`: The payment amount (in token units).
+- `payerAddress`: The Ethereum wallet address of the attendee.
 
-- **Success (200)**:
-  ```json
-  {
-    "message": "Request created successfully.",
-    "requestID": "0xREQUEST_ID"
-  }
-  ```
-
-- **Error**:
-  ```json
-  {
-    "error": "Error message here."
-  }
-  ```
+**Example Response**:
+```json
+{
+  "message": "Request created successfully.",
+  "requestID": "0xREQUEST_ID"
+}
+```
 
 ---
 
 ## Code Explanation
 
-### Core Logic
+### Key Logic
 
 - **Request Initialization**:
   ```javascript
-  const epkSignatureProvider = new EthereumPrivateKeySignatureProvider({
-    method: Types.Signature.METHOD.ECDSA,
-    privateKey: payeePK,
-  });
-
   const requestClient = new RequestNetwork({
     nodeConnectionConfig: {
       baseURL: "https://sepolia.gateway.request.network/",
@@ -134,72 +118,55 @@ By default, the server will run on `http://localhost:3000`.
     signatureProvider: epkSignatureProvider,
   });
   ```
+  This initializes the Request Client SDK, connecting it to the Sepolia testnet.
 
-  Initializes the Request Client SDK with a private key-based signature provider and connects to the Sepolia testnet.
-
-- **Request Parameters**:
+- **Creating a Payment Request**:
   ```javascript
   const requestCreateParameters = {
     requestInfo: {
-      currency: {
-        type: Types.RequestLogic.CURRENCY.ERC20,
-        value: "0x370DE27fdb7D1Ff1e1BaA7D11c5820a324Cf623C", // Sepolia ERC-20 Token
-        network: "sepolia",
-      },
+      currency: { type: Types.RequestLogic.CURRENCY.ERC20, value: "TOKEN_ADDRESS", network: "sepolia" },
       expectedAmount: utils.parseUnits(amount, 18).toString(),
-      payee: {
-        type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: payeeIdentity,
-      },
-      payer: {
-        type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-        value: payerIdentity,
-      },
+      payee: { type: Types.Identity.TYPE.ETHEREUM_ADDRESS, value: payeeIdentity },
+      payer: { type: Types.Identity.TYPE.ETHEREUM_ADDRESS, value: payerIdentity },
     },
-    paymentNetwork: {
-      id: Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT,
-      parameters: {
-        paymentNetworkName: "sepolia",
-        paymentAddress: paymentRecipient,
-        feeAddress: feeRecipient,
-        feeAmount: "0",
-      },
-    },
-    contentData: {
-      reason: "Payment request",
-      dueDate: "",
-    },
-    signer: {
-      type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
-      value: payeeIdentity,
-    },
+    paymentNetwork: { id: Types.Extension.PAYMENT_NETWORK_ID.ERC20_FEE_PROXY_CONTRACT, parameters: { paymentAddress: paymentRecipient } },
   };
-  ```
 
-  Defines the parameters for creating an ERC-20 payment request.
-
-- **Request Creation**:
-  ```javascript
   const request = await requestClient.createRequest(requestCreateParameters);
   const requestData = await request.waitForConfirmation();
   ```
-
-  Creates the request and waits for its confirmation.
+  This code handles all the payment request logic, ensuring security and reliability.
 
 ---
 
 ## Frontend Integration
 
-To integrate this server with a frontend:
-1. Create a form to capture `amount` and `payerAddress`.
-2. Send a request to the `/create-request` endpoint.
-3. Display the `requestID` or any relevant data returned by the API.
+### Example Integration
+
+To connect the backend API to your frontend:
+1. Create a form for ticket purchase that collects `amount` and `payerAddress`.
+2. Use the following example code for making a request:
+
+```javascript
+fetch("http://localhost:3000/create-request", {
+  method: "GET",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    amount: "100",
+    payerAddress: "0xPAYER_WALLET_ADDRESS"
+  })
+})
+  .then((response) => response.json())
+  .then((data) => console.log(data));
+```
+
+3. Display the `requestID` in your UI to allow attendees to complete their payment.
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please fork the repository, make changes, and submit a pull request. 
+Contributions are welcome! Please fork the repository, make your changes, and submit a pull request.
 
 ---
 
@@ -214,6 +181,5 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 - [Request Network Documentation](https://docs.request.network/)
 - [Ethers.js Library](https://docs.ethers.org/)
 - [Node.js Express Framework](https://expressjs.com/)
-
----
+```
 
