@@ -17,7 +17,7 @@ const port = process.env.PORT;
 const payeePK = process.env.PAYEE_PK;
 
 app.get("/create-request", async (req, res) => {
-  const {amount, payerAddress} = req.body;
+  const { amount, payerAddress } = req.body;
 
   const epkSignatureProvider = new EthereumPrivateKeySignatureProvider({
     method: Types.Signature.METHOD.ECDSA,
@@ -76,12 +76,35 @@ app.get("/create-request", async (req, res) => {
   const request = await requestClient.createRequest(requestCreateParameters);
   const requestData = await request.waitForConfirmation();
 
-  res
-    .status(200)
-    .send({
-      message: "Request created successfully.",
-      requestID: requestData.requestId,
+  res.status(200).send({
+    message: "Request created successfully.",
+    requestID: requestData.requestId,
+  });
+});
+
+app.get("/requests/:userAddress", async (req, res) => {
+  try {
+    
+    const { userAddress: identityAddress } = req.params;
+
+    const requestClient = new RequestNetwork({
+      nodeConnectionConfig: {
+        baseURL: "https://sepolia.gateway.request.network/",
+      },
     });
+  
+    const requests = await requestClient.fromIdentity({
+      type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
+      value: identityAddress,
+    });
+    const requestDatas = requests.map((request) => request.getData());
+  
+    res
+      .status(200)
+      .send({ message: "Request fetched successfully", data: requestDatas });
+  } catch (error) {
+    res.status(500).send({ message: "Internal server error", error });
+  }
 });
 
 app.listen(port, () => {
