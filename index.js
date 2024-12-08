@@ -1,4 +1,6 @@
 const express = require("express");
+const cors = require("cors");
+
 const {
   RequestNetwork,
   Types,
@@ -16,6 +18,7 @@ const app = express();
 const port = process.env.PORT;
 const payeePK = process.env.PAYEE_PK;
 
+app.use(cors({ origin: "*" }));
 app.get("/create-request", async (req, res) => {
   const { amount, payerAddress } = req.body;
 
@@ -84,7 +87,6 @@ app.get("/create-request", async (req, res) => {
 
 app.get("/requests/:userAddress", async (req, res) => {
   try {
-    
     const { userAddress: identityAddress } = req.params;
 
     const requestClient = new RequestNetwork({
@@ -92,13 +94,13 @@ app.get("/requests/:userAddress", async (req, res) => {
         baseURL: "https://sepolia.gateway.request.network/",
       },
     });
-  
+
     const requests = await requestClient.fromIdentity({
       type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
       value: identityAddress,
     });
     const requestDatas = requests.map((request) => request.getData());
-  
+
     res
       .status(200)
       .send({ message: "Request fetched successfully", data: requestDatas });
