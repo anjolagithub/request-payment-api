@@ -15,10 +15,12 @@ const { Wallet, utils } = require("ethers");
 config();
 
 const app = express();
+app.use(cors({ origin: "*" }));
+app.use(express.json());
+
 const port = process.env.PORT;
 const payeePK = process.env.PAYEE_PK;
 
-app.use(cors({ origin: "*" }));
 app.get("/create-request", async (req, res) => {
   const { amount, payerAddress } = req.body;
 
