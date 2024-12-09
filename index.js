@@ -50,7 +50,7 @@ app.post("/create-request", async (req, res) => {
     const payeeIdentity = new Wallet(payeePK).address;
     const payerIdentity = payerAddress;
     const paymentRecipient = payeeIdentity;
-    const feeRecipient = utils.parseUnits("0", 18).toString();
+    const feeRecipient = "0x0000000000000000000000000000000000000000";
   
     const requestCreateParameters = {
       requestInfo: {
