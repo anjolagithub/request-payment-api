@@ -17,6 +17,15 @@ config();
 const app = express();
 app.use(cors({ origin: "*" }));
 app.use(express.json());
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*"); // Allow all origins
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  next();
+});
 
 const port = process.env.PORT;
 const payeePK = process.env.PAYEE_PK;
