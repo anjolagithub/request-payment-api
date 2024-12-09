@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-
 const {
   RequestNetwork,
   Types,
@@ -11,28 +10,29 @@ const {
 } = require("@requestnetwork/epk-signature");
 const { config } = require("dotenv");
 const { Wallet, utils } = require("ethers");
-
 config();
 
 const app = express();
-app.use(cors({ origin: "*" }));
+
+// Improved CORS configuration
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow any origin during development
+    // In production, replace * with specific allowed origins
+    callback(null, true);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
 app.use(express.json());
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*"); // Allow all origins
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  next();
-});
+app.use(express.urlencoded({ extended: true }));
 
 const port = process.env.PORT;
 const payeePK = process.env.PAYEE_PK;
 
 app.post("/create-request", async (req, res) => {
   try {
-    
     const { amount, payerAddress } = req.body;
   
     const epkSignatureProvider = new EthereumPrivateKeySignatureProvider({
@@ -80,7 +80,7 @@ app.post("/create-request", async (req, res) => {
         },
       },
       contentData: {
-        reason: "ð",
+        reason: "ð",
         dueDate: "",
       },
       signer: {
@@ -104,19 +104,16 @@ app.post("/create-request", async (req, res) => {
 app.get("/requests/:userAddress", async (req, res) => {
   try {
     const { userAddress: identityAddress } = req.params;
-
     const requestClient = new RequestNetwork({
       nodeConnectionConfig: {
         baseURL: "https://sepolia.gateway.request.network/",
       },
     });
-
     const requests = await requestClient.fromIdentity({
       type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
       value: identityAddress,
     });
     const requestDatas = requests.map((request) => request.getData());
-
     res
       .status(200)
       .send({ message: "Request fetched successfully", data: requestDatas });
