@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 const port = process.env.PORT;
 const payeePK = process.env.PAYEE_PK;
 
-app.get("/create-request", async (req, res) => {
+app.post("/create-request", async (req, res) => {
   const { amount, payerAddress } = req.body;
 
   const epkSignatureProvider = new EthereumPrivateKeySignatureProvider({
