@@ -174,9 +174,6 @@ Contributions are welcome! Please fork the repository, make your changes, and su
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
 
----
-## Video Link
-https://www.loom.com/share/147697c2ee8546aca69003cd1905c5cf?sid=91e18a18-b4d7-4f2b-992f-92252fd34705
 
 ---
 
