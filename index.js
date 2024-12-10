@@ -56,7 +56,7 @@ app.post("/create-request", async (req, res) => {
       requestInfo: {
         currency: {
           type: Types.RequestLogic.CURRENCY.ERC20,
-          value: "0x88Ecc15fDC2985A7926171B938BB2Cd808A5ba40",
+          value: "0x370DE27fdb7D1Ff1e1BaA7D11c5820a324Cf623C",
           network: "sepolia",
         },
         expectedAmount: utils.parseUnits(amount, 18).toString(),
